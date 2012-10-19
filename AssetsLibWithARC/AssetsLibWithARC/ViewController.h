@@ -11,5 +11,7 @@
 
 @interface ViewController : UIViewController
 @property (strong, nonatomic) IBOutlet UIActivityIndicatorView *myActivity;
+@property (strong, nonatomic) IBOutlet UILabel *statusLabel;
+- (IBAction)startBtnPressed:(UIButton *)sender;
 
 @end
