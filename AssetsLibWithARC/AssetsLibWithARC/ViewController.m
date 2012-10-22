@@ -7,6 +7,7 @@
 //
 
 #import "ViewController.h"
+#import <ImageIO/ImageIO.h>
 
 @interface ViewController ()
 
@@ -79,6 +80,97 @@
     [self setStatusLabel:nil];
     [super viewDidUnload];
 }
+
+- (void) showMetadata
+{
+    NSDictionary *metadata;
+    
+    NSLog(@"Getting the item out of assets array. And the metadata is like: ");
+    ALAsset *asset = [assets objectAtIndex:1];
+    metadata = asset.defaultRepresentation.metadata;
+    NSLog(@"%@", metadata);
+    
+    NSLog(@"Created Date of this asset: %@", [asset valueForProperty:ALAssetPropertyDate]);
+    
+    // Get the original date time
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyy:MM:dd HH:mm:ss"];
+    NSString *takenDate = [[metadata objectForKey:@"{Exif}"] objectForKey:@"DateTimeOriginal"];
+    
+    if (takenDate != nil)
+        NSLog(@"This photo was taken at the time: %@", takenDate);
+    else
+        NSLog(@"This photo doesn't have taken date information.");
+//    formatter dateFromString:[];
+    
+    //NSLog(@"")
+    
+    NSLog(@"Location of this asset: %@", [asset valueForProperty:ALAssetPropertyLocation]);
+ 
+    
+}
+
+// Get information out of the asset, including:
+// metadata, createDate, takenDate(if exists), location(Problem1)
+// Problem1: Missing CoreLocation framework on iOS 6 SDK with Xcode 4.5
+- (void) showAssetMetadataWithoutLog:(ALAsset *)asset
+{
+    NSDictionary *metadata;
+    
+    //NSLog(@"Getting the item out of assets array. And the metadata is like: ");
+    metadata = asset.defaultRepresentation.metadata;
+    //NSLog(@"%@", metadata);
+    
+    NSDate *createDate = [asset valueForProperty:ALAssetPropertyDate];
+    //NSLog(@"Created Date of this asset: %@", createDate);
+    
+    // Get the original date time
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyy:MM:dd HH:mm:ss"];
+    NSString *takenDate = [[metadata objectForKey:@"{Exif}"] objectForKey:@"DateTimeOriginal"];
+    
+    /*
+    if (takenDate != nil)
+        NSLog(@"This photo was taken at the time: %@", takenDate);
+    else
+        NSLog(@"This photo doesn't have taken date information.");
+     */
+    //    formatter dateFromString:[];
+    
+    //NSLog(@"")
+    
+    [asset valueForProperty:ALAssetPropertyLocation];
+    //NSLog(@"Location of this asset: %@", [asset valueForProperty:ALAssetPropertyLocation]);
+    
+}
+
+- (void) showAssetMetadata:(ALAsset *)asset
+{
+    NSDictionary *metadata;
+    
+    NSLog(@"Getting the item out of assets array. And the metadata is like: ");
+    metadata = asset.defaultRepresentation.metadata;
+    NSLog(@"%@", metadata);
+    
+    NSLog(@"Created Date of this asset: %@", [asset valueForProperty:ALAssetPropertyDate]);
+    
+    // Get the original date time
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyy:MM:dd HH:mm:ss"];
+    NSString *takenDate = [[metadata objectForKey:@"{Exif}"] objectForKey:@"DateTimeOriginal"];
+    
+    if (takenDate != nil)
+        NSLog(@"This photo was taken at the time: %@", takenDate);
+    else
+        NSLog(@"This photo doesn't have taken date information.");
+    //    formatter dateFromString:[];
+    
+    //NSLog(@"")
+    
+    NSLog(@"Location of this asset: %@", [asset valueForProperty:ALAssetPropertyLocation]);
+    
+}
+
 - (IBAction)startBtnPressed:(UIButton *)sender {
     [self.myActivity setHidden:NO];
     [self.myActivity startAnimating];
@@ -89,10 +181,12 @@
     {
         if (result != NULL) {
             stop = FALSE;
-            NSLog(@"See asset: %@ at %d", result, i++);
+            //NSLog(@"See asset: %@ at %d", result, i++);
             i++;
-            //[assets addObject:result];
+            [assets addObject:result];
             //[self showNumOfPic];
+            //[self showAssetMetadataWithoutLog:result];
+            [self showAssetMetadata:result];
         }
     };
     
@@ -103,9 +197,13 @@
             [group enumerateAssetsUsingBlock:assetEnumerator];
         }
         else {
+            // Reach the end of iterating? Not neccessarily.
             NSLog(@"end of group");
             [self showNumOfPic];
             [self showUsedTime:[self stopCountingTime]];
+            
+            // Show the metadata of the first item out of assets
+            //[self showMetadata];
         }
         
         [self.myActivity stopAnimating];
@@ -123,5 +221,7 @@
     [lib enumerateGroupsWithTypes:ALAssetsGroupAll usingBlock:assetGroupEnumerator failureBlock:^(NSError *error) {
         NSLog(@"Failed: %@", error);
     }];
+    
+
 }
 @end
