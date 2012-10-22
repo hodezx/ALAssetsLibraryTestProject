@@ -15,6 +15,11 @@ Number of photos:   3033
 Used time:          16s
 Memory:             
 
+LOG:
+1. Using NSLog to show every asset, used up 16s
+2. Without NSLog to access every asset, used up ? seconds
+	Used around 5MB of RAM, not accurate maybe
+
 -- iOS Simulator --
 Number of photos:   1000+
 LOG:
