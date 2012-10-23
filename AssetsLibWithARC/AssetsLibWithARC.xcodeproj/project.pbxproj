@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C68D9C331634FBFE00C6FCA5 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C68D9C321634FBFE00C6FCA5 /* CoreLocation.framework */; };
 		C6A0A7891630F2F40081915F /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6A0A7881630F2F40081915F /* ViewController.m */; };
 		C6A9D6001634E9E7009664E3 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C6A9D5FF1634E9E7009664E3 /* ImageIO.framework */; };
 		C6CC931C162FE294006882D5 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C6CC931B162FE294006882D5 /* UIKit.framework */; };
@@ -23,6 +24,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C68D9C321634FBFE00C6FCA5 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = ../../../../../../System/Library/Frameworks/CoreLocation.framework; sourceTree = "<group>"; };
 		C6A0A7871630F2F40081915F /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		C6A0A7881630F2F40081915F /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		C6A9D5FF1634E9E7009664E3 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
@@ -48,6 +50,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C68D9C331634FBFE00C6FCA5 /* CoreLocation.framework in Frameworks */,
 				C6A9D6001634E9E7009664E3 /* ImageIO.framework in Frameworks */,
 				C6CC9342162FE3C7006882D5 /* AssetsLibrary.framework in Frameworks */,
 				C6CC931C162FE294006882D5 /* UIKit.framework in Frameworks */,
@@ -62,6 +65,7 @@
 		C6CC930C162FE294006882D5 = {
 			isa = PBXGroup;
 			children = (
+				C68D9C321634FBFE00C6FCA5 /* CoreLocation.framework */,
 				C6A9D5FF1634E9E7009664E3 /* ImageIO.framework */,
 				C6CC9341162FE3C7006882D5 /* AssetsLibrary.framework */,
 				C6CC9321162FE294006882D5 /* AssetsLibWithARC */,
@@ -261,6 +265,10 @@
 		C6CC933C162FE294006882D5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/AssetsLibWithARC\"",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "AssetsLibWithARC/AssetsLibWithARC-Prefix.pch";
 				INFOPLIST_FILE = "AssetsLibWithARC/AssetsLibWithARC-Info.plist";
@@ -273,6 +281,10 @@
 		C6CC933D162FE294006882D5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/AssetsLibWithARC\"",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "AssetsLibWithARC/AssetsLibWithARC-Prefix.pch";
 				INFOPLIST_FILE = "AssetsLibWithARC/AssetsLibWithARC-Info.plist";

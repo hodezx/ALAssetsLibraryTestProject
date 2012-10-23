@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #import <ImageIO/ImageIO.h>
+#import <CoreLocation/CoreLocation.h>
 
 @interface ViewController ()
 
@@ -20,6 +21,7 @@
     NSDate *startDate;
     NSTimer *timer;
     CFAbsoluteTime startTime, stopTime;
+    NSArray *assetsByCreatedDate, *assetsByTakenDate;
 }
 
 @synthesize myActivity = _myActivity;
@@ -49,18 +51,14 @@
 
 - (void) showUsedTime: (NSTimeInterval)usedTime;
 {
-    NSLog(@"This process takes up %g seconds.", usedTime);
+    NSLog(@"Iterating takes up %g seconds.", usedTime);
     self.statusLabel.text = [NSString stringWithFormat:@"Takes up %.2f secs.", usedTime];
-    //self.statusLabel.text = [NSString stringWithFormat:@"Takes up %.2f secs for %d photos", usedTime, [assets count]];
-    
-    //NSLog(@"There are %d items in assets.", [assets count]);
-    //NSLog(@"What class is an asset: %@", [[assets objectAtIndex:1] class]);
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    self.statusLabel.text = @"Press the button.";
+    self.statusLabel.text = @"Iterate before sort.";
     [self.myActivity setHidden:YES];
 }
 
@@ -78,7 +76,24 @@
 - (void)viewDidUnload {
     [self setMyActivity:nil];
     [self setStatusLabel:nil];
+    [self setImageView:nil];
     [super viewDidUnload];
+}
+
+- (NSDate *) getCreatedDateOfAsset:(ALAsset *)asset
+{
+    return [asset valueForProperty:ALAssetPropertyDate];
+}
+
+- (NSDate *) getTakenDateOfAsset:(ALAsset *)asset
+{
+    NSDictionary *metadata;
+    NSString *takenDateStr = [[metadata objectForKey:@"{Exif}"] objectForKey:@"DateTimeOriginal"];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyy:MM:dd HH:mm:ss"];
+    NSDate *takenDate = [formatter dateFromString:takenDateStr];
+    
+    return (takenDate == nil) ? [self getCreatedDateOfAsset:asset] : takenDate;
 }
 
 - (void) showMetadata
@@ -86,7 +101,7 @@
     NSDictionary *metadata;
     
     NSLog(@"Getting the item out of assets array. And the metadata is like: ");
-    ALAsset *asset = [assets objectAtIndex:1];
+    ALAsset *asset = [assets lastObject];
     metadata = asset.defaultRepresentation.metadata;
     NSLog(@"%@", metadata);
     
@@ -103,9 +118,9 @@
         NSLog(@"This photo doesn't have taken date information.");
 //    formatter dateFromString:[];
     
-    //NSLog(@"")
-    
-    NSLog(@"Location of this asset: %@", [asset valueForProperty:ALAssetPropertyLocation]);
+
+    CLLocation *location = [asset valueForProperty:ALAssetPropertyLocation];
+    NSLog(@"Location of this asset: %@", location);
  
     
 }
@@ -113,36 +128,24 @@
 // Get information out of the asset, including:
 // metadata, createDate, takenDate(if exists), location(Problem1)
 // Problem1: Missing CoreLocation framework on iOS 6 SDK with Xcode 4.5
+// Problem1 solved: Add the framework manually via Finder
 - (void) showAssetMetadataWithoutLog:(ALAsset *)asset
 {
-    NSDictionary *metadata;
-    
-    //NSLog(@"Getting the item out of assets array. And the metadata is like: ");
-    metadata = asset.defaultRepresentation.metadata;
-    //NSLog(@"%@", metadata);
-    
+    NSDictionary *metadata = asset.defaultRepresentation.metadata;
+    /*
     NSDate *createDate = [asset valueForProperty:ALAssetPropertyDate];
-    //NSLog(@"Created Date of this asset: %@", createDate);
     
     // Get the original date time
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setDateFormat:@"yyyy:MM:dd HH:mm:ss"];
-    NSString *takenDate = [[metadata objectForKey:@"{Exif}"] objectForKey:@"DateTimeOriginal"];
+    NSString *takenDateStr = [[metadata objectForKey:@"{Exif}"] objectForKey:@"DateTimeOriginal"];
+    NSDate *takenDate = [formatter dateFromString:takenDateStr];
     
-    /*
-    if (takenDate != nil)
-        NSLog(@"This photo was taken at the time: %@", takenDate);
-    else
-        NSLog(@"This photo doesn't have taken date information.");
+    CLLocation *location = [asset valueForProperty:ALAssetPropertyLocation];    
      */
-    //    formatter dateFromString:[];
-    
-    //NSLog(@"")
-    
-    [asset valueForProperty:ALAssetPropertyLocation];
-    //NSLog(@"Location of this asset: %@", [asset valueForProperty:ALAssetPropertyLocation]);
-    
 }
+
+
 
 - (void) showAssetMetadata:(ALAsset *)asset
 {
@@ -157,7 +160,9 @@
     // Get the original date time
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setDateFormat:@"yyyy:MM:dd HH:mm:ss"];
-    NSString *takenDate = [[metadata objectForKey:@"{Exif}"] objectForKey:@"DateTimeOriginal"];
+    NSString *takenDateStr = [[metadata objectForKey:@"{Exif}"] objectForKey:@"DateTimeOriginal"];
+    NSDate *takenDate = [formatter dateFromString:takenDateStr];
+
     
     if (takenDate != nil)
         NSLog(@"This photo was taken at the time: %@", takenDate);
@@ -167,8 +172,24 @@
     
     //NSLog(@"")
     
-    NSLog(@"Location of this asset: %@", [asset valueForProperty:ALAssetPropertyLocation]);
+    CLLocation *location = [asset valueForProperty:ALAssetPropertyLocation];
+    NSLog(@"Location of this asset: %@", location);
     
+}
+
+- (void) showThumbnail
+{
+    ALAsset *asset = [assets lastObject];
+    UIImage *thumbnail = [UIImage imageWithCGImage:[asset thumbnail]];
+    
+    CGImageRef cg_thumbnail = asset.thumbnail;
+    NSLog(@"Size of the CGImageRef: %lu %lu", CGImageGetHeight(cg_thumbnail), CGImageGetWidth(cg_thumbnail));
+    
+    [self.imageView setImage:thumbnail];
+    NSLog(@"The size of the thumbnail %g %g", thumbnail.size.width, thumbnail.size.height);
+    NSLog(@"The URL of the asset: %@", asset.defaultRepresentation.url);
+    NSData *data = UIImageJPEGRepresentation(thumbnail, 0);
+    NSLog(@"The space it uses: %d", [data length]);
 }
 
 - (IBAction)startBtnPressed:(UIButton *)sender {
@@ -187,6 +208,7 @@
             //[self showNumOfPic];
             //[self showAssetMetadataWithoutLog:result];
             [self showAssetMetadata:result];
+            //[self showMetadata];
         }
     };
     
@@ -204,6 +226,7 @@
             
             // Show the metadata of the first item out of assets
             //[self showMetadata];
+            [self showThumbnail];
         }
         
         [self.myActivity stopAnimating];
@@ -223,5 +246,55 @@
     }];
     
 
+}
+- (IBAction)sortByCDBtnPressed:(UIButton *)sender {
+    [self.myActivity setHidden:NO];
+    [self.myActivity startAnimating];
+    
+    if ([assets count] <= 1) {
+        //NSLog(@"Sorted by created date.");
+        [self performSelector:@selector(startBtnPressed:)];
+    }
+    
+    // Start counting
+    [self startCountingTime];
+    assetsByCreatedDate = [assets sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        NSDate *obj1_CD = [self getCreatedDateOfAsset:obj1];
+        NSDate *obj2_CD = [self getCreatedDateOfAsset:obj2];
+        return [obj2_CD compare:obj1_CD];
+    }];
+    
+    self.statusLabel.text = [NSString stringWithFormat:@"%@, Sorted by CD takes up %gs", self.statusLabel.text, [self stopCountingTime]];
+    
+    [self.myActivity stopAnimating];
+    [self.myActivity setHidden:YES];
+    
+    NSLog(@"Test the sortByCD: %@ %@", [self getCreatedDateOfAsset:[assetsByCreatedDate objectAtIndex:0]], [self getCreatedDateOfAsset:[assetsByCreatedDate lastObject]]);
+}
+
+- (IBAction)sortByTDBtnPressed:(UIButton *)sender {
+    [self.myActivity setHidden:NO];
+    [self.myActivity startAnimating];
+    
+    if ([assets count] < 1) {
+        //NSLog(@"Sorted by taken date.");
+        [self performSelector:@selector(startBtnPressed:)];
+    }
+    
+    // Start counting
+    [self startCountingTime];
+    
+    assetsByTakenDate = [assets sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        NSDate *obj1_CD = [self getTakenDateOfAsset:obj1];
+        NSDate *obj2_CD = [self getTakenDateOfAsset:obj2];
+        return [obj2_CD compare:obj1_CD];
+    }];
+    
+    self.statusLabel.text = [NSString stringWithFormat:@"%@, Sorted by TD takes up %gs", self.statusLabel.text, [self stopCountingTime]];
+    
+    [self.myActivity stopAnimating];
+    [self.myActivity setHidden:YES];
+    
+    NSLog(@"Test the sortByTD: %@ %@", [self getTakenDateOfAsset:[assetsByTakenDate objectAtIndex:0]], [self getTakenDateOfAsset:[assetsByTakenDate lastObject]]);
 }
 @end
