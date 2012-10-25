@@ -1,0 +1,70 @@
+ALAssetsLibrary Test Project
+
+Last updated on Oct 25, 2012
+
+-- Requirements:
+
+1) Use ALAssetsLibrary to load asset groups, iterate over all photo type assets in those groups.
+
+Iterating all photo assets simply requires two enumerating block and the call to the assets library.
+	- Create an instance of ALAssetsLibrary;
+	- Use the method enumerateGroupsWithTypes:usingBlock:failureBlock: on the ALAssetsLibrary instance;
+	- Implement the enumerating group block;
+	- Inside the group enumeration block, use setAssetsFilter: method to filter photos, and call enumerateAssetsUsingBlock: on the group instance;
+	- Implement the enumerating asset block;
+	- Inside the enumerating asset block we can add assets to an array
+
+
+2)  iterate over all assets by their dates (taken date and/or property date), is it doable?
+
+Since taken date is saved in the metadata of the asset and we cannot retrive the taken date in another way, we will have to touch the metadata of every asset which will consume a lot of resources and time.
+
+In problem 1) we now have an array holding all our assets. Now we can iterate through that array and sort it using the taken date(or property date if taken date is invalid or missing).
+
+To access the property date of an asset, we can use valueForProperty:ALAssetPropertyDate method on the asset to get an NSDate object, which is the property date. To access the taken date, however, requires more steps. First we get the metadata which is a dictionary by using asset.defaultRepresentation.metadata, and then get the exif information - also a dictionary - from metadata. And inside the exif information, retrive the taken date using the key "DateTimeOriginal". At last transform the string to NSDate using an NSDateFormatter instance.
+
+
+3)We want to have the final collection sorted by the dates.
+
+In problem 2) we have a sorted array of the assets, now we can store it using something like Core Data.
+
+-- End of requirements
+
+-- Targeted Questions:
+# Results from actual devices are yet to come.
+On iOS simulator on my MBA
+1) Speed
+	- 1000 pics
+		Iterating:					0.04s
+		Sorting by property date:	0.21s
+		Sorting by taken date:		N/A
+	- 2000 pics:
+		Iterating:					0.07s
+		Sorting by property date:	0.47s
+		Sorting by taken date:		N/A
+	- 3000 pics
+		Iterating:					0.09s
+		Sorting by property date:	0.73s
+		Sorting by taken date:		9.89s 
+	- 5000 pics:
+		Iterating:					0.16s
+		Sorting by property date:	1.50s
+		Sorting by taken date:		28.4s
+2) Memory
+	Using malloc_size() on all values of asset.defaultRepresentation.metadata, I've got the same number of few photos, 192 (byte?). And for the thumbnail, it is 128 (byte).
+	!!! I am highly doubtful about these size finding though.
+	And there's no way we can store all the metadata and thumbnails in the RAM. Using the current method, the app will still allocate about 500MB for the metadata of every asset in 3000 pics. So the answer is no.
+
+3) 2 identical photos, TO BE FILLED
+
+-- End of requirements
+
+-- Open Questions:
+1) Any interesting findings in "{Exif}" properties set?
+2) How to wait for job (block) completion?
+3) How many approaches we have to accomplish this task?
+4) Any other interesting discoveries?
+
+ALL TO BE FILLED
+
+-- End of open questions

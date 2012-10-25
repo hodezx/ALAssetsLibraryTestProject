@@ -9,6 +9,8 @@
 #import "ViewController.h"
 #import <ImageIO/ImageIO.h>
 #import <CoreLocation/CoreLocation.h>
+#import "HOAsset.h"
+#import<malloc/malloc.h>
 
 @interface ViewController ()
 
@@ -22,6 +24,8 @@
     NSTimer *timer;
     CFAbsoluteTime startTime, stopTime;
     NSArray *assetsByCreatedDate, *assetsByTakenDate;
+    NSMutableArray *hoassets;
+    NSDateFormatter *formatter;
 }
 
 @synthesize myActivity = _myActivity;
@@ -42,8 +46,8 @@
 
 - (NSTimeInterval) stopCountingTime
 {
-    stopTime = CFAbsoluteTimeGetCurrent();
-    NSLog(@"Used time by CFAbsoluteTime: %f seconds.", stopTime - startTime);
+//    stopTime = CFAbsoluteTimeGetCurrent();
+//    NSLog(@"Used time by CFAbsoluteTime: %f seconds.", stopTime - startTime);
     
     NSDate *timeNow = [[NSDate alloc] init];
     return [timeNow timeIntervalSinceDate:startDate];
@@ -60,6 +64,9 @@
     [super viewDidLoad];
     self.statusLabel.text = @"Iterate before sort.";
     [self.myActivity setHidden:YES];
+    
+    formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyy:MM:dd HH:mm:ss"];
 }
 
 - (void) showNumOfPic
@@ -87,13 +94,17 @@
 
 - (NSDate *) getTakenDateOfAsset:(ALAsset *)asset
 {
-    NSDictionary *metadata;
+    @autoreleasepool {
+    
+    NSDictionary *metadata = asset.defaultRepresentation.metadata;
     NSString *takenDateStr = [[metadata objectForKey:@"{Exif}"] objectForKey:@"DateTimeOriginal"];
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"yyyy:MM:dd HH:mm:ss"];
+
     NSDate *takenDate = [formatter dateFromString:takenDateStr];
     
+    //metadata = nil;
+    //takenDateStr = nil;
     return (takenDate == nil) ? [self getCreatedDateOfAsset:asset] : takenDate;
+    }
 }
 
 - (void) showMetadata
@@ -108,8 +119,6 @@
     NSLog(@"Created Date of this asset: %@", [asset valueForProperty:ALAssetPropertyDate]);
     
     // Get the original date time
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"yyyy:MM:dd HH:mm:ss"];
     NSString *takenDate = [[metadata objectForKey:@"{Exif}"] objectForKey:@"DateTimeOriginal"];
     
     if (takenDate != nil)
@@ -131,7 +140,7 @@
 // Problem1 solved: Add the framework manually via Finder
 - (void) showAssetMetadataWithoutLog:(ALAsset *)asset
 {
-    NSDictionary *metadata = asset.defaultRepresentation.metadata;
+    //NSDictionary *metadata = asset.defaultRepresentation.metadata;
     /*
     NSDate *createDate = [asset valueForProperty:ALAssetPropertyDate];
     
@@ -145,8 +154,6 @@
      */
 }
 
-
-
 - (void) showAssetMetadata:(ALAsset *)asset
 {
     NSDictionary *metadata;
@@ -158,7 +165,6 @@
     NSLog(@"Created Date of this asset: %@", [asset valueForProperty:ALAssetPropertyDate]);
     
     // Get the original date time
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setDateFormat:@"yyyy:MM:dd HH:mm:ss"];
     NSString *takenDateStr = [[metadata objectForKey:@"{Exif}"] objectForKey:@"DateTimeOriginal"];
     NSDate *takenDate = [formatter dateFromString:takenDateStr];
@@ -204,10 +210,12 @@
             stop = FALSE;
             //NSLog(@"See asset: %@ at %d", result, i++);
             i++;
+            
             [assets addObject:result];
+            //NSLog(@"The index for this asset: %d", index);
             //[self showNumOfPic];
             //[self showAssetMetadataWithoutLog:result];
-            [self showAssetMetadata:result];
+            //[self showAssetMetadata:result];
             //[self showMetadata];
         }
     };
@@ -227,6 +235,20 @@
             // Show the metadata of the first item out of assets
             //[self showMetadata];
             [self showThumbnail];
+            ALAsset *last = [assets objectAtIndex:1];
+            NSDictionary *last_dict = last.defaultRepresentation.metadata;
+            
+            NSArray *dictArr = [last_dict allValues];
+            id obj = nil;
+            int totalSize = 0;
+            for (obj in dictArr) {
+                totalSize += malloc_size((__bridge const void *)(obj));
+            }
+
+            NSLog(@"size of myObject: %zd", totalSize);
+            NSLog(@"the array of all values looks like: %@", dictArr);
+            
+            NSLog(@"size of thumbnail: %zd", malloc_size(last.thumbnail));
         }
         
         [self.myActivity stopAnimating];
@@ -284,17 +306,28 @@
     // Start counting
     [self startCountingTime];
     
-    assetsByTakenDate = [assets sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-        NSDate *obj1_CD = [self getTakenDateOfAsset:obj1];
-        NSDate *obj2_CD = [self getTakenDateOfAsset:obj2];
-        return [obj2_CD compare:obj1_CD];
+    hoassets = [[NSMutableArray alloc] init];
+    @autoreleasepool {
+        for (ALAsset *asset in assets) {
+            HOAsset *hoasset = [[HOAsset alloc] initWithTakenDate:[self getTakenDateOfAsset:asset]];
+            [hoassets addObject:hoasset];
+            hoasset = nil;
+        }
+    }
+
+    
+    assetsByTakenDate = [hoassets sortedArrayUsingComparator:^NSComparisonResult(HOAsset *obj1, HOAsset *obj2) {
+        NSDate *obj1_TD = obj1.takenDate;
+        NSDate *obj2_TD = obj2.takenDate;
+        return [obj2_TD compare:obj1_TD];
     }];
     
+     
     self.statusLabel.text = [NSString stringWithFormat:@"%@, Sorted by TD takes up %gs", self.statusLabel.text, [self stopCountingTime]];
     
     [self.myActivity stopAnimating];
     [self.myActivity setHidden:YES];
     
-    NSLog(@"Test the sortByTD: %@ %@", [self getTakenDateOfAsset:[assetsByTakenDate objectAtIndex:0]], [self getTakenDateOfAsset:[assetsByTakenDate lastObject]]);
+    //NSLog(@"Test the sortByTD: %@ %@", [self getTakenDateOfAsset:[assetsByTakenDate objectAtIndex:0]], [self getTakenDateOfAsset:[assetsByTakenDate lastObject]]);
 }
 @end
