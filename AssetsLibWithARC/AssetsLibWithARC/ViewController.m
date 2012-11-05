@@ -11,6 +11,7 @@
 #import <CoreLocation/CoreLocation.h>
 #import "HOAsset.h"
 #import<malloc/malloc.h>
+#import <CommonCrypto/CommonDigest.h>
 
 @interface ViewController ()
 
@@ -183,6 +184,35 @@
     
 }
 
+- (NSString *)getHash:(UIImage *)inImage
+{
+    unsigned char result[16];
+    NSData *imageData = [NSData dataWithData:UIImagePNGRepresentation(inImage)];
+    CC_MD5([imageData bytes], [imageData length], result);
+    NSString *imageHash = [NSString stringWithFormat:@"%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+                           result[0], result[1], result[2], result[3],
+                           result[4], result[5], result[6], result[7],
+                           result[8], result[9], result[10], result[11],
+                           result[12], result[13], result[14], result[15]];
+    return imageHash;
+}
+
+- (int) cntOfDiffPhoto:(NSArray *)assetsArray
+{
+    int cnt = 0;
+    NSMutableArray *hashes = [[NSMutableArray alloc] init];
+    
+    for (HOAsset *asset in assetsArray) {
+        NSString *hashVal = [NSString stringWithFormat:@"%@", asset.hashValue];
+        if (![hashes containsObject:hashVal]) {
+            cnt++;
+            [hashes addObject:hashVal];
+        }
+    }
+    
+    return cnt;//[hashes count];
+}
+
 - (void) showThumbnail
 {
     ALAsset *asset = [assets lastObject];
@@ -201,6 +231,13 @@
 - (IBAction)startBtnPressed:(UIButton *)sender {
     [self.myActivity setHidden:NO];
     [self.myActivity startAnimating];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [self doStartBtnPressed:sender];
+    });
+}
+
+- (IBAction)doStartBtnPressed:(UIButton *)sender {
+
     
     i = 0;
     
@@ -212,11 +249,21 @@
             i++;
             
             [assets addObject:result];
-            //NSLog(@"The index for this asset: %d", index);
+            NSLog(@"index: %d", index);
+            /*
+            double t = (double)(rand() % 100) / 100;
+
+            [NSThread sleepForTimeInterval:t];
+            NSLog(@"The index for this asset: %d", index);
+            NSLog(@"time: %g", t);
+            NSLog(@"Count of the assets: %d", assets.count);
+            */
+            
             //[self showNumOfPic];
             //[self showAssetMetadataWithoutLog:result];
             //[self showAssetMetadata:result];
             //[self showMetadata];
+            //NSLog(@"Hash of this asset thumbnail %@", [self getHash:[UIImage imageWithCGImage:[result thumbnail]]]);
         }
     };
     
@@ -224,7 +271,9 @@
         if (group != nil) {
             NSLog(@"start processing the group");
             [group setAssetsFilter:[ALAssetsFilter allPhotos]];
-            [group enumerateAssetsUsingBlock:assetEnumerator];
+            //[group enumerateAssetsUsingBlock:assetEnumerator];
+            NSIndexSet *indexSet = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(1, [group numberOfAssets] - 1)];
+            [group enumerateAssetsAtIndexes:indexSet options:NSEnumerationConcurrent usingBlock:assetEnumerator];
         }
         else {
             // Reach the end of iterating? Not neccessarily.
@@ -235,7 +284,7 @@
             // Show the metadata of the first item out of assets
             //[self showMetadata];
             [self showThumbnail];
-            ALAsset *last = [assets objectAtIndex:1];
+            ALAsset *last = [assets lastObject];
             NSDictionary *last_dict = last.defaultRepresentation.metadata;
             
             NSArray *dictArr = [last_dict allValues];
@@ -244,11 +293,17 @@
             for (obj in dictArr) {
                 totalSize += malloc_size((__bridge const void *)(obj));
             }
+            
+            NSLog(@"Hash of this asset thumbnail %@", [self getHash:[UIImage imageWithCGImage:[last thumbnail]]]);
 
             NSLog(@"size of myObject: %zd", totalSize);
             NSLog(@"the array of all values looks like: %@", dictArr);
             
             NSLog(@"size of thumbnail: %zd", malloc_size(last.thumbnail));
+            
+            NSLog(@"size of the default representation: %llu", last.defaultRepresentation.size);
+            
+
         }
         
         [self.myActivity stopAnimating];
@@ -307,12 +362,10 @@
     [self startCountingTime];
     
     hoassets = [[NSMutableArray alloc] init];
-    @autoreleasepool {
-        for (ALAsset *asset in assets) {
-            HOAsset *hoasset = [[HOAsset alloc] initWithTakenDate:[self getTakenDateOfAsset:asset]];
-            [hoassets addObject:hoasset];
-            hoasset = nil;
-        }
+    for (ALAsset *asset in assets) {
+        HOAsset *hoasset = [[HOAsset alloc] initWithAsset:asset];
+        [hoassets addObject:hoasset];
+        hoasset = nil;
     }
 
     
@@ -321,9 +374,16 @@
         NSDate *obj2_TD = obj2.takenDate;
         return [obj2_TD compare:obj1_TD];
     }];
+     
     
      
     self.statusLabel.text = [NSString stringWithFormat:@"%@, Sorted by TD takes up %gs", self.statusLabel.text, [self stopCountingTime]];
+    
+    //NSLog(@"There are %d different photos.", [self cntOfDiffPhoto:hoassets]);
+    
+//    for (HOAsset *anAsset in hoassets) {
+//        NSLog(@"taken date: %@, hash: %@", anAsset.takenDate, anAsset.hashValue);
+//    }
     
     [self.myActivity stopAnimating];
     [self.myActivity setHidden:YES];

@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C6133158163E81D7007C1643 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C6CC931D162FE294006882D5 /* Foundation.framework */; };
 		C67B9913163925D7000875F7 /* HOAsset.m in Sources */ = {isa = PBXBuildFile; fileRef = C67B9912163925D7000875F7 /* HOAsset.m */; };
 		C68D9C331634FBFE00C6FCA5 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C68D9C321634FBFE00C6FCA5 /* CoreLocation.framework */; };
 		C6A0A7891630F2F40081915F /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6A0A7881630F2F40081915F /* ViewController.m */; };
 		C6A9D6001634E9E7009664E3 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C6A9D5FF1634E9E7009664E3 /* ImageIO.framework */; };
 		C6CC931C162FE294006882D5 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C6CC931B162FE294006882D5 /* UIKit.framework */; };
-		C6CC931E162FE294006882D5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C6CC931D162FE294006882D5 /* Foundation.framework */; };
 		C6CC9320162FE294006882D5 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C6CC931F162FE294006882D5 /* CoreGraphics.framework */; };
 		C6CC9326162FE294006882D5 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C6CC9324162FE294006882D5 /* InfoPlist.strings */; };
 		C6CC9328162FE294006882D5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C6CC9327162FE294006882D5 /* main.m */; };
@@ -54,10 +54,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				C68D9C331634FBFE00C6FCA5 /* CoreLocation.framework in Frameworks */,
+				C6133158163E81D7007C1643 /* Foundation.framework in Frameworks */,
 				C6A9D6001634E9E7009664E3 /* ImageIO.framework in Frameworks */,
 				C6CC9342162FE3C7006882D5 /* AssetsLibrary.framework in Frameworks */,
 				C6CC931C162FE294006882D5 /* UIKit.framework in Frameworks */,
-				C6CC931E162FE294006882D5 /* Foundation.framework in Frameworks */,
 				C6CC9320162FE294006882D5 /* CoreGraphics.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -271,10 +271,6 @@
 		C6CC933C162FE294006882D5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/AssetsLibWithARC\"",
-				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "AssetsLibWithARC/AssetsLibWithARC-Prefix.pch";
 				INFOPLIST_FILE = "AssetsLibWithARC/AssetsLibWithARC-Info.plist";
@@ -287,10 +283,6 @@
 		C6CC933D162FE294006882D5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/AssetsLibWithARC\"",
-				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "AssetsLibWithARC/AssetsLibWithARC-Prefix.pch";
 				INFOPLIST_FILE = "AssetsLibWithARC/AssetsLibWithARC-Info.plist";
